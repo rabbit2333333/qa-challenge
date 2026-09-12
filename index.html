@@ -249,14 +249,14 @@
 
         <textarea id="answerInput" placeholder="Write your answer here..." disabled></textarea>
 
-        <div class="btn-group">
+        <div class="btn-group" id="mainBtnGroup">
             <button class="btn-draw" id="btnDraw" onclick="drawQuestion()">Draw a Question 🎲</button>
             <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>Send Answer 💌</button>
         </div>
 
         <button class="btn-skip" id="btnSkip" onclick="openSkipModal()" disabled>Skip this question 💨</button>
 
-        <!-- 連續點 3 下這行文字可重置進度 -->
+        <!-- 連續點擊 3 次此行文字可重置進度 -->
         <div class="footer-note" id="secretReset" onclick="handleSecretReset()">Every answer goes straight to the rabbit</div>
     </div>
 </div>
@@ -269,13 +269,24 @@
     </div>
 </div>
 
-<!-- 跳過題目的二選一彈窗 -->
+<!-- 跳過題目的彈窗 -->
 <div class="modal-overlay" id="skipModal">
     <div class="modal-box">
-        <div class="modal-message">Do you want to see this question again in the future? 🐾</div>
+        <div class="modal-message" id="skipModalPrompt">Do you want to see this question again in the future? 🐾</div>
         <div class="modal-btn-group">
-            <button class="modal-btn" onclick="confirmSkip(true)">Never show this again 🙅</button>
+            <button class="modal-btn" id="btnNeverShow" onclick="confirmSkip(true)">Never show this again 🙅</button>
             <button class="modal-btn modal-btn-secondary" onclick="confirmSkip(false)">Ask me again later ⏳</button>
+        </div>
+    </div>
+</div>
+
+<!-- 通關後的選擇彈窗 -->
+<div class="modal-overlay" id="finishModal">
+    <div class="modal-box">
+        <div class="modal-message">🎉 All standard questions cleared!<br><br>Would you like to keep rolling for Rabbit cards, or take a break? ✨</div>
+        <div class="modal-btn-group">
+            <button class="modal-btn" onclick="continueWithRabbitCards()">Keep Drawing (Rabbit Cards) 🎲</button>
+            <button class="modal-btn modal-btn-secondary" onclick="closeModal('finishModal')">Take a Break for now ☕</button>
         </div>
     </div>
 </div>
@@ -289,13 +300,28 @@
     let resetClickCount = 0;
     let resetTimer = null;
 
-    // 取得已永久排除的題目清單 (已回答或選擇永不出現)
+    // 判斷是否為 Rabbit / Boss 題（精準鎖定妳最新的題目與標籤）
+    function isRabbitCard(q) {
+        if (!q) return false;
+        const cat = (q.category || '').toLowerCase();
+        const text = (q.question || '').toLowerCase();
+        const author = (q.author || '').toLowerCase();
+        return text.includes('grill me') || 
+               text.includes('ask me any question') || 
+               cat.includes('endboss') || 
+               cat.includes('rabbit') || 
+               author.includes('system') || 
+               author.includes('rabbit');
+    }
+
     function getExcludedQuestions() {
         return JSON.parse(localStorage.getItem('rf_excluded_questions') || '[]');
     }
 
-    // 將題目加入排除清單
     function excludeQuestion(qText) {
+        // 如果是 Rabbit 題，絕對不加入排除名單
+        if (currentQuestion && isRabbitCard(currentQuestion)) return;
+
         const list = getExcludedQuestions();
         if (!list.includes(qText)) {
             list.push(qText);
@@ -314,6 +340,19 @@
 
     function openSkipModal() {
         if (!currentQuestion) return;
+
+        const neverBtn = document.getElementById('btnNeverShow');
+        const promptMsg = document.getElementById('skipModalPrompt');
+
+        if (isRabbitCard(currentQuestion)) {
+            // Rabbit 題：隱藏永久不出現按鈕，提示只能稍後再抽
+            neverBtn.style.display = 'none';
+            promptMsg.innerText = "This is a special Rabbit card! You can't banish it forever. Save it for later? 🐰";
+        } else {
+            neverBtn.style.display = 'block';
+            promptMsg.innerText = "Do you want to see this question again in the future? 🐾";
+        }
+
         document.getElementById('skipModal').style.display = 'flex';
     }
 
@@ -349,19 +388,38 @@
         }
 
         const excluded = getExcludedQuestions();
-        // 過濾掉所有已經答過或被永久跳過的題目
-        const availablePool = questionPool.filter(q => !excluded.includes(q.question));
+        // 篩選常規題庫與 Rabbit 題
+        const regularAvailable = questionPool.filter(q => !excluded.includes(q.question) && !isRabbitCard(q));
+        const rabbitCards = questionPool.filter(q => isRabbitCard(q));
 
-        if (availablePool.length === 0) {
+        // 如果一般題目答完了，跳出選擇彈窗（抽 Rabbit 題或休息）
+        if (regularAvailable.length === 0 && rabbitCards.length > 0) {
+            document.getElementById('finishModal').style.display = 'flex';
+            return;
+        }
+
+        // 還有常規題目時，正常隨機抽（含 Rabbit 牌）
+        const fullAvailable = questionPool.filter(q => !excluded.includes(q.question));
+        if (fullAvailable.length === 0) {
             document.getElementById('qCategory').innerText = "All Done 🎉";
-            document.getElementById('qText').innerText = "You've gone through all the questions! The rabbit is super proud of you 💕";
+            document.getElementById('qText').innerText = "You've completed all the questions! 💕";
             document.getElementById('btnDraw').disabled = true;
             return;
         }
 
-        const randomIndex = Math.floor(Math.random() * availablePool.length);
-        currentQuestion = availablePool[randomIndex];
+        pickCard(fullAvailable[Math.floor(Math.random() * fullAvailable.length)]);
+    }
 
+    function continueWithRabbitCards() {
+        closeModal('finishModal');
+        const rabbitCards = questionPool.filter(q => isRabbitCard(q));
+        if (rabbitCards.length > 0) {
+            pickCard(rabbitCards[Math.floor(Math.random() * rabbitCards.length)]);
+        }
+    }
+
+    function pickCard(selected) {
+        currentQuestion = selected;
         document.getElementById('qCategory').innerText = `Category: ${currentQuestion.category}`;
         document.getElementById('qText').innerText = currentQuestion.question;
 
@@ -383,13 +441,15 @@
         document.getElementById('btnSubmit').disabled = true;
         document.getElementById('btnSkip').disabled = true;
 
+        const isRabbit = isRabbitCard(currentQuestion);
+
         const discordPayload = {
             username: "Rabbit & Fox HQ",
             avatar_url: "https://i.pinimg.com/736x/21/d9/b4/21d9b4b0e3bebe7b233a0ea7d08d87aa.jpg",
             embeds: [
                 {
-                    title: "🦊 The Fox has sent an answer!",
-                    color: 16745889,
+                    title: isRabbit ? "👑 The Fox answered the Rabbit / Boss Card!" : "🦊 The Fox has sent an answer!",
+                    color: isRabbit ? 16753920 : 16745889,
                     fields: [
                         {
                             name: "📂 Topic",
@@ -419,8 +479,10 @@
                 body: JSON.stringify(discordPayload)
             });
 
-            // 回答完後，將此題永久排除，不再被抽到
-            excludeQuestion(currentQuestion.question);
+            // 只有非 Rabbit 題目才排除；Rabbit 題會保留以便未來再次抽到
+            if (!isRabbit) {
+                excludeQuestion(currentQuestion.question);
+            }
 
             document.getElementById('answerInput').value = "";
             document.getElementById('answerInput').disabled = true;
@@ -442,19 +504,21 @@
         document.getElementById('btnSubmit').disabled = true;
         document.getElementById('btnSkip').disabled = true;
 
-        if (neverShowAgain) {
-            // 選擇永不出現 -> 存入排除名單
+        const isRabbit = isRabbitCard(currentQuestion);
+
+        if (neverShowAgain && !isRabbit) {
             excludeQuestion(currentQuestion.question);
         }
 
-        // 推播跳過狀態至 Discord
         const discordPayload = {
             username: "Rabbit & Fox HQ",
             avatar_url: "https://i.pinimg.com/736x/21/d9/b4/21d9b4b0e3bebe7b233a0ea7d08d87aa.jpg",
             embeds: [
                 {
-                    title: neverShowAgain ? "🙅 The Fox banished a question permanently!" : "⏳ The Fox postponed a question for later!",
-                    color: neverShowAgain ? 10066329 : 14211288,
+                    title: (neverShowAgain && !isRabbit) 
+                        ? "🙅 The Fox banished a question permanently!" 
+                        : "⏳ The Fox postponed a question for later!",
+                    color: (neverShowAgain && !isRabbit) ? 10066329 : 14211288,
                     fields: [
                         {
                             name: "📂 Topic",
@@ -468,7 +532,7 @@
                         },
                         {
                             name: "📌 Choice",
-                            value: neverShowAgain ? "Never show this again" : "Ask me again later",
+                            value: (neverShowAgain && !isRabbit) ? "Never show this again" : "Ask me again later",
                             inline: false
                         }
                     ],
@@ -491,12 +555,12 @@
         document.getElementById('answerInput').disabled = true;
         document.getElementById('btnDraw').disabled = false;
         document.getElementById('qCategory').innerText = "Skipped 💨";
-        document.getElementById('qText').innerText = neverShowAgain 
+        document.getElementById('qText').innerText = (neverShowAgain && !isRabbit)
             ? "Question removed forever! Ready for the next one?" 
-            : "No problem, we'll save it for another time ✨";
+            : "No problem, saved for later ✨";
     }
 
-    // 測試專用：連續點擊底部文字 3 次重置進度
+    // 測試專用：連續點擊底部文字 3 次可重置本地進度
     function handleSecretReset() {
         resetClickCount++;
         clearTimeout(resetTimer);
