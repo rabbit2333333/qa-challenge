@@ -299,9 +299,8 @@
         </div>
 
         <div class="input-wrapper">
-            <!-- 移除 300 字限制，讓狐狸能盡情發揮 -->
             <textarea id="answerInput" placeholder="Write your answer here..." oninput="handleInputText(this)" disabled></textarea>
-            <div class="char-counter" id="charCounter">0 字</div>
+            <div class="char-counter" id="charCounter">0 words</div>
         </div>
 
         <div class="btn-group">
@@ -357,8 +356,16 @@
     let resetTimer = null;
     let cooldownQuestions = [];
 
+    // 計算英文單字數（Words）
+    function countWords(str) {
+        const trimmed = (str || '').trim();
+        if (!trimmed) return 0;
+        return trimmed.split(/\s+/).filter(Boolean).length;
+    }
+
     function handleInputText(el) {
-        document.getElementById('charCounter').innerText = `${el.value.length} 字`;
+        const words = countWords(el.value);
+        document.getElementById('charCounter').innerText = `${words} ${words === 1 ? 'word' : 'words'}`;
     }
 
     function fireCuteConfetti() {
@@ -540,7 +547,7 @@
         fireCuteConfetti();
 
         document.getElementById('qCategory').innerText = "🏆 Achievement Unlocked";
-        document.getElementById('qText').innerText = "You've answered all standard questions!\nEvery secret is revealed. Ready to grill the rabbit? 👑";
+        document.getElementById('qText').innerText = "You've answered all standard questions!\nReady to grill the rabbit? 👑";
 
         const drawBtn = document.getElementById('btnDraw');
         if (rabbitCards.length > 0) {
@@ -575,7 +582,7 @@
         const input = document.getElementById('answerInput');
         input.disabled = false;
         input.value = "";
-        document.getElementById('charCounter').innerText = "0 字";
+        document.getElementById('charCounter').innerText = "0 words";
         input.focus();
         document.getElementById('btnSubmit').disabled = false;
         document.getElementById('btnSkip').disabled = false;
@@ -585,11 +592,6 @@
         const answer = document.getElementById('answerInput').value.trim();
         if (!answer) {
             showAlert("Don't leave it blank! 😈");
-            return;
-        }
-
-        if (answer.length < 5) {
-            showAlert("That's a bit too short for the rabbit... Write a little more! 🐰");
             return;
         }
 
@@ -641,7 +643,7 @@
             setCardVisual('normal');
 
             document.getElementById('answerInput').value = "";
-            document.getElementById('charCounter').innerText = "0 字";
+            document.getElementById('charCounter').innerText = "0 words";
             document.getElementById('answerInput').disabled = true;
             document.getElementById('btnDraw').disabled = false;
             document.getElementById('btnSkip').disabled = true;
@@ -704,7 +706,7 @@
 
         setCardVisual('normal');
         document.getElementById('answerInput').value = "";
-        document.getElementById('charCounter').innerText = "0 字";
+        document.getElementById('charCounter').innerText = "0 words";
         document.getElementById('answerInput').disabled = true;
         document.getElementById('btnDraw').disabled = false;
         document.getElementById('qCategory').innerText = "Skipped 💨";
