@@ -181,6 +181,7 @@
             text-align: center;
         }
 
+        /* 自訂彈窗 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -282,7 +283,7 @@
     </div>
 </div>
 
-<!-- 送出前防呆確認彈窗 -->
+<!-- 送出前確認彈窗 -->
 <div class="modal-overlay" id="submitConfirmModal">
     <div class="modal-box">
         <div class="modal-message">Ready to send? Once submitted, this question will be completed and won't appear again! 💌</div>
@@ -326,23 +327,18 @@
     let resetCount = 0;
     let resetTimer = null;
 
-    // 取得/更新 3題冷卻隊列
-    function getCooldownList() {
-        try {
-            return JSON.parse(sessionStorage.getItem('rf_cooldown_list') || '[]');
-        } catch (e) {
-            return [];
-        }
-    }
+    // 執行期冷卻佇列：保存最近跳過題目的文字（嚴格去除前後空白）
+    let cooldownQuestions = [];
 
     function addToCooldown(qText) {
-        let list = getCooldownList();
-        list = list.filter(item => item !== qText); // 移到最新位置
-        list.push(qText);
-        if (list.length > 3) {
-            list.shift(); // 最多保留3題，超過就解鎖最舊的
+        const clean = (qText || '').trim();
+        if (!clean) return;
+        cooldownQuestions = cooldownQuestions.filter(item => item !== clean);
+        cooldownQuestions.push(clean);
+        // 最多保留 3 題，超過 3 題就將最舊的解除冷卻
+        if (cooldownQuestions.length > 3) {
+            cooldownQuestions.shift();
         }
-        sessionStorage.setItem('rf_cooldown_list', JSON.stringify(list));
     }
 
     function isRabbitCard(q) {
@@ -362,9 +358,10 @@
     function excludeQuestion(qText) {
         if (currentQuestion && isRabbitCard(currentQuestion)) return;
 
+        const clean = (qText || '').trim();
         const list = getExcludedQuestions();
-        if (!list.includes(qText)) {
-            list.push(qText);
+        if (!list.includes(clean)) {
+            list.push(clean);
             localStorage.setItem('rf_excluded_questions', JSON.stringify(list));
         }
         updateDrawButtonText();
@@ -374,7 +371,7 @@
         const excluded = getExcludedQuestions();
         const regularQuestions = questionPool.filter(q => !isRabbitCard(q));
         const total = regularQuestions.length;
-        const answeredCount = regularQuestions.filter(q => excluded.includes(q.question)).length;
+        const answeredCount = regularQuestions.filter(q => excluded.includes(q.question.trim())).length;
         
         const btn = document.getElementById('btnDraw');
         if (total > 0) {
@@ -443,17 +440,17 @@
         }
 
         const excluded = getExcludedQuestions();
-        const regularAvailable = questionPool.filter(q => !isRabbitCard(q) && !excluded.includes(q.question));
+        const regularAvailable = questionPool.filter(q => !isRabbitCard(q) && !excluded.includes(q.question.trim()));
         const rabbitCards = questionPool.filter(q => isRabbitCard(q));
 
-        // 常規題目全解完時，跳出通關彈窗
+        // 1. 常規題全抽完時，彈出通關確認窗
         if (regularAvailable.length === 0 && rabbitCards.length > 0) {
             document.getElementById('finishModal').style.display = 'flex';
             return;
         }
 
-        // 所有未被永久排除的可用牌卡（包含普通題與 Rabbit 卡）
-        const fullAvailable = questionPool.filter(q => !excluded.includes(q.question));
+        // 2. 獲取所有目前能抽的完整牌池
+        const fullAvailable = questionPool.filter(q => !excluded.includes(q.question.trim()));
         if (fullAvailable.length === 0) {
             document.getElementById('qCategory').innerText = "All Done 🎉";
             document.getElementById('qText').innerText = "You've completed all the questions! 💕";
@@ -461,13 +458,19 @@
             return;
         }
 
-        // 優先過濾掉「正在冷卻佇列中（最近被跳過）」的題目
-        const cooldownList = getCooldownList();
-        const nonCooldownDeck = fullAvailable.filter(q => !cooldownList.includes(q.question));
+        // 3. 排除冷卻中題目的嚴格挑選
+        let eligible = fullAvailable.filter(q => !cooldownQuestions.includes(q.question.trim()));
 
-        // 如果還有沒在冷卻中的題目，優先抽它們；若剩餘題目全在冷卻中，則退回全可用池中抽
-        const poolToPick = nonCooldownDeck.length > 0 ? nonCooldownDeck : fullAvailable;
-        pickCard(poolToPick[Math.floor(Math.random() * poolToPick.length)]);
+        // 如果冷卻排除了太多導致無題可選，則逐步退回冷卻清單最舊的題目
+        if (eligible.length === 0) {
+            // 從冷卻清單由舊到新找出一題最久沒出現的
+            const oldestInCooldown = cooldownQuestions[0];
+            eligible = fullAvailable.filter(q => q.question.trim() === oldestInCooldown);
+            if (eligible.length === 0) eligible = fullAvailable;
+        }
+
+        const chosen = eligible[Math.floor(Math.random() * eligible.length)];
+        pickCard(chosen);
     }
 
     function continueWithRabbitCards() {
@@ -547,6 +550,9 @@
 
             if (!isRabbit) {
                 excludeQuestion(currentQuestion.question);
+            } else {
+                // 答完 Rabbit 題也加入冷卻，避免連環抽
+                addToCooldown(currentQuestion.question);
             }
 
             document.getElementById('answerInput').value = "";
@@ -576,7 +582,7 @@
         if (neverShowAgain && !isRabbit) {
             excludeQuestion(currentQuestion.question);
         } else {
-            // 選擇稍後再答（或 Rabbit 題）：加入至少 3 題冷卻清單
+            // 加入至少 3 題冷卻清單
             addToCooldown(currentQuestion.question);
         }
 
@@ -640,7 +646,7 @@
         if (resetCount >= 3) {
             resetCount = 0;
             localStorage.removeItem('rf_excluded_questions');
-            sessionStorage.removeItem('rf_cooldown_list');
+            cooldownQuestions = [];
             showAlert("Progress cleared! All questions are back. 🔄");
             document.getElementById('btnDraw').disabled = false;
             document.getElementById('qCategory').innerText = "Ready?";
