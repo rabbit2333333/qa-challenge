@@ -181,7 +181,6 @@
             text-align: center;
         }
 
-        /* 自訂彈窗 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -275,7 +274,6 @@
     </div>
 </div>
 
-<!-- 提示型彈窗 -->
 <div class="modal-overlay" id="customModal">
     <div class="modal-box">
         <div class="modal-message" id="modalText">Don't leave it blank! 😈</div>
@@ -283,7 +281,6 @@
     </div>
 </div>
 
-<!-- 送出前防呆確認彈窗 -->
 <div class="modal-overlay" id="submitConfirmModal">
     <div class="modal-box">
         <div class="modal-message">Ready to send? Once submitted, this question will be completed and won't appear again! 💌</div>
@@ -294,19 +291,17 @@
     </div>
 </div>
 
-<!-- 跳過題目的彈窗（含返回按鈕） -->
 <div class="modal-overlay" id="skipModal">
     <div class="modal-box">
         <div class="modal-message" id="skipModalPrompt">Do you want to see this question again in the future? 🐾</div>
         <div class="modal-btn-group">
-            <button class="modal-btn" id="btnNeverShow" onclick="confirmSkip(true)">Never show this again 🙅</button>
+            <button class="modal-btn" onclick="closeModal('skipModal')">Wait, let me answer! 🐾</button>
             <button class="modal-btn modal-btn-secondary" onclick="confirmSkip(false)">Ask me again later ⏳</button>
-            <button class="modal-btn modal-btn-secondary" onclick="closeModal('skipModal')">Wait, let me answer! 🐾</button>
+            <button class="modal-btn modal-btn-secondary" id="btnNeverShow" onclick="confirmSkip(true)">Never show this again 🙅</button>
         </div>
     </div>
 </div>
 
-<!-- 通關後的選擇彈窗 -->
 <div class="modal-overlay" id="finishModal">
     <div class="modal-box">
         <div class="modal-message">🎉 All standard questions cleared!<br><br>Would you like to keep rolling for Rabbit cards, or take a break? ✨</div>
@@ -449,7 +444,6 @@
         document.getElementById('btnSkip').disabled = false;
     }
 
-    // 點擊 Send Answer 先檢查是否空白，非空白則彈窗確認
     function promptSubmitConfirm() {
         const answer = document.getElementById('answerInput').value.trim();
         if (!answer) {
@@ -460,7 +454,6 @@
         document.getElementById('submitConfirmModal').style.display = 'flex';
     }
 
-    // 確認送出後執行傳輸
     async function confirmAndSendAnswer() {
         closeModal('submitConfirmModal');
 
