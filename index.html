@@ -63,7 +63,7 @@
             padding: 28px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
         }
 
         .question-box {
@@ -120,7 +120,6 @@
         }
 
         button {
-            flex: 1;
             padding: 13px;
             border-radius: 16px;
             font-size: 14px;
@@ -131,6 +130,7 @@
         }
 
         .btn-draw {
+            flex: 1;
             background: #ff85a1;
             color: #ffffff;
             box-shadow: 0 4px 12px rgba(255, 133, 161, 0.3);
@@ -141,12 +141,26 @@
         }
 
         .btn-submit {
+            flex: 1;
             background: #ffccd5;
             color: #594a4e;
         }
 
         .btn-submit:hover:not(:disabled) {
             background: #ffb3c1;
+        }
+
+        .btn-skip {
+            background: #f4edea;
+            color: #9a8c98;
+            font-size: 13px;
+            padding: 9px;
+            border-radius: 12px;
+        }
+
+        .btn-skip:hover:not(:disabled) {
+            background: #eaddd7;
+            color: #6d6875;
         }
 
         button:disabled {
@@ -226,6 +240,8 @@
             <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>Send Answer 💌</button>
         </div>
 
+        <button class="btn-skip" id="btnSkip" onclick="skipQuestion()" disabled>Skip this question 💨</button>
+
         <div class="footer-note">Every answer goes straight to the rabbit</div>
     </div>
 </div>
@@ -295,6 +311,7 @@
         document.getElementById('answerInput').value = "";
         document.getElementById('answerInput').focus();
         document.getElementById('btnSubmit').disabled = false;
+        document.getElementById('btnSkip').disabled = false;
     }
 
     async function submitAnswer() {
@@ -305,6 +322,7 @@
         }
 
         document.getElementById('btnSubmit').disabled = true;
+        document.getElementById('btnSkip').disabled = true;
 
         const discordPayload = {
             username: "Rabbit & Fox HQ",
@@ -345,12 +363,62 @@
             document.getElementById('answerInput').value = "";
             document.getElementById('answerInput').disabled = true;
             document.getElementById('btnDraw').disabled = false;
+            document.getElementById('btnSkip').disabled = true;
             document.getElementById('qCategory').innerText = "Sent Successfully";
             document.getElementById('qText').innerText = "Your answer was delivered. Ready for the next one?";
         } catch (error) {
             showAlert("Something went wrong, please try again!");
             document.getElementById('btnSubmit').disabled = false;
+            document.getElementById('btnSkip').disabled = false;
         }
+    }
+
+    async function skipQuestion() {
+        if (!currentQuestion) return;
+
+        document.getElementById('btnSubmit').disabled = true;
+        document.getElementById('btnSkip').disabled = true;
+
+        // 偷偷傳送跳過通知給 Discord
+        const discordPayload = {
+            username: "Rabbit & Fox HQ",
+            avatar_url: "https://i.pinimg.com/736x/21/d9/b4/21d9b4b0e3bebe7b233a0ea7d08d87aa.jpg",
+            embeds: [
+                {
+                    title: "💨 The Fox skipped a question!",
+                    color: 10066329, // 灰色調，代表逃跑/跳過
+                    fields: [
+                        {
+                            name: "📂 Topic",
+                            value: currentQuestion.category,
+                            inline: true
+                        },
+                        {
+                            name: "❓ Skipped Question",
+                            value: currentQuestion.question,
+                            inline: false
+                        }
+                    ],
+                    timestamp: new Date().toISOString()
+                }
+            ]
+        };
+
+        try {
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(discordPayload)
+            });
+        } catch (e) {
+            // 靜默處理
+        }
+
+        document.getElementById('answerInput').value = "";
+        document.getElementById('answerInput').disabled = true;
+        document.getElementById('btnDraw').disabled = false;
+        document.getElementById('qCategory').innerText = "Skipped 💨";
+        document.getElementById('qText').innerText = "Question skipped! Click 'Draw a Question' when you're ready.";
     }
 
     window.onload = fetchQuestions;
