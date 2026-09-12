@@ -50,6 +50,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            user-select: none;
         }
 
         .card-title {
@@ -57,6 +58,12 @@
             font-weight: 700;
             color: #ff5d8f;
             letter-spacing: 0.5px;
+        }
+
+        /* 隱藏觸發點：外觀完全跟一般文字一樣 */
+        .secret-trigger {
+            cursor: default;
+            display: inline-block;
         }
 
         .card-body {
@@ -173,11 +180,9 @@
             font-size: 12px;
             color: var(--text-muted);
             text-align: center;
-            user-select: none;
-            cursor: pointer;
         }
 
-        /* 自訂彈窗通用背景 */
+        /* 自訂彈窗 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -238,7 +243,11 @@
 
 <div class="cute-card">
     <div class="card-header">
-        <div class="card-title">🐰 Rabbit & Fox // Little Space 🦊</div>
+        <div class="card-title">
+            <!-- 隱藏暗門：在 🐰 上連續點擊 3 次即可清空進度 -->
+            <span class="secret-trigger" onclick="handleHiddenReset()">🐰</span> 
+            Rabbit & Fox // Little Space 🦊
+        </div>
     </div>
 
     <div class="card-body">
@@ -249,15 +258,14 @@
 
         <textarea id="answerInput" placeholder="Write your answer here..." disabled></textarea>
 
-        <div class="btn-group" id="mainBtnGroup">
+        <div class="btn-group">
             <button class="btn-draw" id="btnDraw" onclick="drawQuestion()">Draw a Question 🎲</button>
             <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>Send Answer 💌</button>
         </div>
 
         <button class="btn-skip" id="btnSkip" onclick="openSkipModal()" disabled>Skip this question 💨</button>
 
-        <!-- 連續點擊 3 次此行文字可重置本地進度 -->
-        <div class="footer-note" id="secretReset" onclick="handleSecretReset()">Every answer goes straight to the rabbit</div>
+        <div class="footer-note">Every answer goes straight to the rabbit</div>
     </div>
 </div>
 
@@ -297,21 +305,21 @@
 
     let questionPool = [];
     let currentQuestion = null;
-    let resetClickCount = 0;
+    let resetCount = 0;
     let resetTimer = null;
 
-    // 精準判定：只要類別是 Rabbit（或題目包含 grill me / ask me any question），即為 Rabbit 牌
     function isRabbitCard(q) {
         if (!q) return false;
         const cat = (q.category || '').trim().toLowerCase();
-        const text = (q.question || '').toLowerCase();
-        return cat === 'rabbit' || 
-               text.includes('grill me') || 
-               text.includes('ask me any question');
+        return cat === 'rabbit';
     }
 
     function getExcludedQuestions() {
-        return JSON.parse(localStorage.getItem('rf_excluded_questions') || '[]');
+        try {
+            return JSON.parse(localStorage.getItem('rf_excluded_questions') || '[]');
+        } catch (e) {
+            return [];
+        }
     }
 
     function excludeQuestion(qText) {
@@ -382,24 +390,23 @@
         }
 
         const excluded = getExcludedQuestions();
-        const regularAvailable = questionPool.filter(q => !excluded.includes(q.question) && !isRabbitCard(q));
+        const regularAvailable = questionPool.filter(q => !isRabbitCard(q) && !excluded.includes(q.question));
         const rabbitCards = questionPool.filter(q => isRabbitCard(q));
 
-        // 常規題目全答完時，跳出通關彈窗
-        if (regularAvailable.length === 0 && rabbitCards.length > 0) {
+        if (regularAvailable.length > 0) {
+            const currentDeck = questionPool.filter(q => !excluded.includes(q.question));
+            pickCard(currentDeck[Math.floor(Math.random() * currentDeck.length)]);
+            return;
+        }
+
+        if (rabbitCards.length > 0) {
             document.getElementById('finishModal').style.display = 'flex';
             return;
         }
 
-        const fullAvailable = questionPool.filter(q => !excluded.includes(q.question));
-        if (fullAvailable.length === 0) {
-            document.getElementById('qCategory').innerText = "All Done 🎉";
-            document.getElementById('qText').innerText = "You've completed all the questions! 💕";
-            document.getElementById('btnDraw').disabled = true;
-            return;
-        }
-
-        pickCard(fullAvailable[Math.floor(Math.random() * fullAvailable.length)]);
+        document.getElementById('qCategory').innerText = "All Done 🎉";
+        document.getElementById('qText').innerText = "You've completed all the questions! 💕";
+        document.getElementById('btnDraw').disabled = true;
     }
 
     function continueWithRabbitCards() {
@@ -551,16 +558,16 @@
             : "No problem, saved for later ✨";
     }
 
-    // 測試專用：連續點擊底部文字 3 次可重置本地進度
-    function handleSecretReset() {
-        resetClickCount++;
+    // 秘密暗門：在頂部的 🐰 圖示上連續點擊 3 次
+    function handleHiddenReset() {
+        resetCount++;
         clearTimeout(resetTimer);
-        resetTimer = setTimeout(() => { resetClickCount = 0; }, 1000);
+        resetTimer = setTimeout(() => { resetCount = 0; }, 1200);
 
-        if (resetClickCount >= 3) {
+        if (resetCount >= 3) {
+            resetCount = 0;
             localStorage.removeItem('rf_excluded_questions');
-            resetClickCount = 0;
-            showAlert("Progress has been reset! All questions are back. 🔄");
+            showAlert("Progress cleared! You can now draw all questions. 🔄");
             document.getElementById('btnDraw').disabled = false;
             document.getElementById('qCategory').innerText = "Ready?";
             document.getElementById('qText').innerText = "Click 'Draw a Question' to see what the rabbit prepared for you";
