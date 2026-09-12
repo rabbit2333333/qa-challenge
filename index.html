@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENDBOSS PROTOCOL // Q&A CHALLENGE</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --primary: #58a6ff;
+            --accent: #2ea043;
+            --text: #c9d1d9;
+            --muted: #8b949e;
+            --border: #30363d;
+            --danger: #f85149;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .terminal {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 580px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: #21262d;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: var(--danger); }
+        .dot-yellow { background: #d29922; }
+        .dot-green { background: var(--accent); }
+
+        .terminal-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        .terminal-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            width: fit-content;
+        }
+
+        .question-card {
+            background: #0d1117;
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            padding: 20px;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .category-tag {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .question-text {
+            font-size: 16px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        textarea {
+            width: 100%;
+            height: 110px;
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 12px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-draw {
+            background: #238636;
+            color: #fff;
+        }
+
+        .btn-draw:hover:not(:disabled) {
+            background: #2ea043;
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: #0d1117;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background: #79c0ff;
+        }
+
+        button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .footer-note {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="terminal">
+    <div class="terminal-header">
+        <div class="dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+        </div>
+        <div class="terminal-title">PROTOCOL // ROOT ACCESS</div>
+        <div style="width: 42px;"></div>
+    </div>
+
+    <div class="terminal-body">
+        <span class="status-badge" id="systemStatus">STATUS: READY FOR EXTRACTION</span>
+
+        <div class="question-card">
+            <div class="category-tag" id="qCategory">SYSTEM IDLE</div>
+            <div class="question-text" id="qText">Hit "Draw Question" to pull a prompt from the database.</div>
+        </div>
+
+        <textarea id="answerInput" placeholder="Type your answer here... (Submit unlocks the next prompt)" disabled></textarea>
+
+        <div class="btn-group">
+            <button class="btn-draw" id="btnDraw" onclick="drawQuestion()">Draw Question</button>
+            <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>Submit Answer</button>
+        </div>
+
+        <div class="footer-note">Rule: Each answer is transmitted directly. Endboss mode applies.</div>
+    </div>
+</div>
+
+<script>
+    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRgHmPt83mlah6CgZVoad0oNvC1XbaUGz4tkDATEKrSBABxOh6z765dGrVIbhE54nqsc9oEEbnaxGkl/pub?output=csv";
+    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548316493849305159/vz2IRdJnK0pRW9cOCfOHV8VKPMVJkVG5xIITST0ypHdpzgtoXKicqPLKsuZ1yxCCmiqx";
+
+    let questionPool = [];
+    let currentQuestion = null;
+
+    async function fetchQuestions() {
+        try {
+            const res = await fetch(GOOGLE_SHEET_CSV_URL);
+            const data = await res.text();
+            parseCSV(data);
+        } catch (e) {
+            document.getElementById('qText').innerText = "Failed to sync question pool. Check database connection.";
+        }
+    }
+
+    function parseCSV(csvText) {
+        const rows = csvText.split('\n').filter(row => row.trim() !== '');
+        questionPool = [];
+        for (let i = 1; i < rows.length; i++) {
+            const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            if (cols.length >= 2) {
+                questionPool.push({
+                    category: cols[0].replace(/"/g, '').trim(),
+                    question: cols[1].replace(/"/g, '').trim(),
+                    author: cols[2] ? cols[2].replace(/"/g, '').trim() : 'Anonymous'
+                });
+            }
+        }
+    }
+
+    function drawQuestion() {
+        if (questionPool.length === 0) {
+            alert("Questions are still loading or pool is empty!");
+            return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * questionPool.length);
+        currentQuestion = questionPool[randomIndex];
+
+        document.getElementById('qCategory').innerText = `[ CATEGORY: ${currentQuestion.category} ]`;
+        document.getElementById('qText').innerText = currentQuestion.question;
+
+        document.getElementById('btnDraw').disabled = true;
+        document.getElementById('answerInput').disabled = false;
+        document.getElementById('answerInput').value = "";
+        document.getElementById('answerInput').focus();
+        document.getElementById('btnSubmit').disabled = false;
+        document.getElementById('systemStatus').innerText = "LOCK ENGAGED: RESPONSE REQUIRED";
+        document.getElementById('systemStatus').style.color = "#f85149";
+    }
+
+    async function submitAnswer() {
+        const answer = document.getElementById('answerInput').value.trim();
+        if (!answer) {
+            alert("Answer cannot be empty!");
+            return;
+        }
+
+        document.getElementById('btnSubmit').disabled = true;
+        document.getElementById('systemStatus').innerText = "TRANSMITTING TO DISCORD...";
+
+        const discordPayload = {
+            username: "Endboss Protocol",
+            avatar_url: "https://i.imgur.com/4M34hi2.png",
+            embeds: [
+                {
+                    title: "🚨 New Answer Extracted!",
+                    color: 5793266,
+                    fields: [
+                        {
+                            name: "📂 Category",
+                            value: currentQuestion.category,
+                            inline: true
+                        },
+                        {
+                            name: "❓ Question",
+                            value: currentQuestion.question,
+                            inline: false
+                        },
+                        {
+                            name: "💬 Answer",
+                            value: answer,
+                            inline: false
+                        }
+                    ],
+                    footer: {
+                        text: "Endboss Protocol • Status: Monitored"
+                    },
+                    timestamp: new Date().toISOString()
+                }
+            ]
+        };
+
+        try {
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(discordPayload)
+            });
+
+            document.getElementById('systemStatus').innerText = "TRANSMISSION SUCCESSFUL // SYSTEM READY";
+            document.getElementById('systemStatus').style.color = "#2ea043";
+            document.getElementById('answerInput').value = "";
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('btnDraw').disabled = false;
+            document.getElementById('qCategory').innerText = "PROMPT CLEARED";
+            document.getElementById('qText').innerText = "Answer transmitted to headquarters. Ready for next draw.";
+        } catch (error) {
+            alert("Transmission failed. Check connection.");
+            document.getElementById('btnSubmit').disabled = false;
+        }
+    }
+
+    window.onload = fetchQuestions;
+</script>
+</body>
+</html>
