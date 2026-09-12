@@ -256,7 +256,7 @@
 
         <button class="btn-skip" id="btnSkip" onclick="openSkipModal()" disabled>Skip this question 💨</button>
 
-        <!-- 連續點擊 3 次此行文字可重置進度 -->
+        <!-- 連續點擊 3 次此行文字可重置本地進度 -->
         <div class="footer-note" id="secretReset" onclick="handleSecretReset()">Every answer goes straight to the rabbit</div>
     </div>
 </div>
@@ -300,18 +300,14 @@
     let resetClickCount = 0;
     let resetTimer = null;
 
-    // 判斷是否為 Rabbit / Boss 題（精準鎖定妳最新的題目與標籤）
+    // 精準判定：只要類別是 Rabbit（或題目包含 grill me / ask me any question），即為 Rabbit 牌
     function isRabbitCard(q) {
         if (!q) return false;
-        const cat = (q.category || '').toLowerCase();
+        const cat = (q.category || '').trim().toLowerCase();
         const text = (q.question || '').toLowerCase();
-        const author = (q.author || '').toLowerCase();
-        return text.includes('grill me') || 
-               text.includes('ask me any question') || 
-               cat.includes('endboss') || 
-               cat.includes('rabbit') || 
-               author.includes('system') || 
-               author.includes('rabbit');
+        return cat === 'rabbit' || 
+               text.includes('grill me') || 
+               text.includes('ask me any question');
     }
 
     function getExcludedQuestions() {
@@ -319,7 +315,6 @@
     }
 
     function excludeQuestion(qText) {
-        // 如果是 Rabbit 題，絕對不加入排除名單
         if (currentQuestion && isRabbitCard(currentQuestion)) return;
 
         const list = getExcludedQuestions();
@@ -345,7 +340,6 @@
         const promptMsg = document.getElementById('skipModalPrompt');
 
         if (isRabbitCard(currentQuestion)) {
-            // Rabbit 題：隱藏永久不出現按鈕，提示只能稍後再抽
             neverBtn.style.display = 'none';
             promptMsg.innerText = "This is a special Rabbit card! You can't banish it forever. Save it for later? 🐰";
         } else {
@@ -375,7 +369,7 @@
                 questionPool.push({
                     category: cols[0].replace(/"/g, '').trim(),
                     question: cols[1].replace(/"/g, '').trim(),
-                    author: cols[2] ? cols[2].replace(/"/g, '').trim() : 'Rabbit'
+                    author: cols[2] ? cols[2].replace(/"/g, '').trim() : ''
                 });
             }
         }
@@ -388,17 +382,15 @@
         }
 
         const excluded = getExcludedQuestions();
-        // 篩選常規題庫與 Rabbit 題
         const regularAvailable = questionPool.filter(q => !excluded.includes(q.question) && !isRabbitCard(q));
         const rabbitCards = questionPool.filter(q => isRabbitCard(q));
 
-        // 如果一般題目答完了，跳出選擇彈窗（抽 Rabbit 題或休息）
+        // 常規題目全答完時，跳出通關彈窗
         if (regularAvailable.length === 0 && rabbitCards.length > 0) {
             document.getElementById('finishModal').style.display = 'flex';
             return;
         }
 
-        // 還有常規題目時，正常隨機抽（含 Rabbit 牌）
         const fullAvailable = questionPool.filter(q => !excluded.includes(q.question));
         if (fullAvailable.length === 0) {
             document.getElementById('qCategory').innerText = "All Done 🎉";
@@ -479,7 +471,6 @@
                 body: JSON.stringify(discordPayload)
             });
 
-            // 只有非 Rabbit 題目才排除；Rabbit 題會保留以便未來再次抽到
             if (!isRabbit) {
                 excludeQuestion(currentQuestion.question);
             }
