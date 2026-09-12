@@ -181,7 +181,6 @@
             text-align: center;
         }
 
-        /* 自訂彈窗 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -327,6 +326,25 @@
     let resetCount = 0;
     let resetTimer = null;
 
+    // 取得/更新 3題冷卻隊列
+    function getCooldownList() {
+        try {
+            return JSON.parse(sessionStorage.getItem('rf_cooldown_list') || '[]');
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function addToCooldown(qText) {
+        let list = getCooldownList();
+        list = list.filter(item => item !== qText); // 移到最新位置
+        list.push(qText);
+        if (list.length > 3) {
+            list.shift(); // 最多保留3題，超過就解鎖最舊的
+        }
+        sessionStorage.setItem('rf_cooldown_list', JSON.stringify(list));
+    }
+
     function isRabbitCard(q) {
         if (!q) return false;
         const cat = (q.category || '').trim().toLowerCase();
@@ -352,13 +370,10 @@
         updateDrawButtonText();
     }
 
-    // 計算進度並更新按鈕文字：Draw a Question 🎲 (已答/總題數)
     function updateDrawButtonText() {
         const excluded = getExcludedQuestions();
         const regularQuestions = questionPool.filter(q => !isRabbitCard(q));
         const total = regularQuestions.length;
-        
-        // 已回答或已永久刪除的題數
         const answeredCount = regularQuestions.filter(q => excluded.includes(q.question)).length;
         
         const btn = document.getElementById('btnDraw');
@@ -431,20 +446,28 @@
         const regularAvailable = questionPool.filter(q => !isRabbitCard(q) && !excluded.includes(q.question));
         const rabbitCards = questionPool.filter(q => isRabbitCard(q));
 
-        if (regularAvailable.length > 0) {
-            const currentDeck = questionPool.filter(q => !excluded.includes(q.question));
-            pickCard(currentDeck[Math.floor(Math.random() * currentDeck.length)]);
-            return;
-        }
-
-        if (rabbitCards.length > 0) {
+        // 常規題目全解完時，跳出通關彈窗
+        if (regularAvailable.length === 0 && rabbitCards.length > 0) {
             document.getElementById('finishModal').style.display = 'flex';
             return;
         }
 
-        document.getElementById('qCategory').innerText = "All Done 🎉";
-        document.getElementById('qText').innerText = "You've completed all the questions! 💕";
-        document.getElementById('btnDraw').disabled = true;
+        // 所有未被永久排除的可用牌卡（包含普通題與 Rabbit 卡）
+        const fullAvailable = questionPool.filter(q => !excluded.includes(q.question));
+        if (fullAvailable.length === 0) {
+            document.getElementById('qCategory').innerText = "All Done 🎉";
+            document.getElementById('qText').innerText = "You've completed all the questions! 💕";
+            document.getElementById('btnDraw').disabled = true;
+            return;
+        }
+
+        // 優先過濾掉「正在冷卻佇列中（最近被跳過）」的題目
+        const cooldownList = getCooldownList();
+        const nonCooldownDeck = fullAvailable.filter(q => !cooldownList.includes(q.question));
+
+        // 如果還有沒在冷卻中的題目，優先抽它們；若剩餘題目全在冷卻中，則退回全可用池中抽
+        const poolToPick = nonCooldownDeck.length > 0 ? nonCooldownDeck : fullAvailable;
+        pickCard(poolToPick[Math.floor(Math.random() * poolToPick.length)]);
     }
 
     function continueWithRabbitCards() {
@@ -552,6 +575,9 @@
 
         if (neverShowAgain && !isRabbit) {
             excludeQuestion(currentQuestion.question);
+        } else {
+            // 選擇稍後再答（或 Rabbit 題）：加入至少 3 題冷卻清單
+            addToCooldown(currentQuestion.question);
         }
 
         const discordPayload = {
@@ -614,7 +640,8 @@
         if (resetCount >= 3) {
             resetCount = 0;
             localStorage.removeItem('rf_excluded_questions');
-            showAlert("Progress cleared! You can now draw all questions. 🔄");
+            sessionStorage.removeItem('rf_cooldown_list');
+            showAlert("Progress cleared! All questions are back. 🔄");
             document.getElementById('btnDraw').disabled = false;
             document.getElementById('qCategory').innerText = "Ready?";
             document.getElementById('qText').innerText = "Click 'Draw a Question' to see what the rabbit prepared for you";
