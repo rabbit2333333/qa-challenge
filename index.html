@@ -173,9 +173,11 @@
             font-size: 12px;
             color: var(--text-muted);
             text-align: center;
+            user-select: none;
+            cursor: pointer;
         }
 
-        /* 自訂可愛彈窗 */
+        /* 自訂彈窗通用背景 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -194,10 +196,10 @@
             background: #ffffff;
             border: 2px solid #ffe5ec;
             border-radius: 20px;
-            padding: 24px 30px;
+            padding: 24px 26px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(255, 133, 161, 0.25);
-            max-width: 320px;
+            max-width: 330px;
             width: 85%;
         }
 
@@ -206,17 +208,29 @@
             font-weight: 600;
             color: #4a4e69;
             margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        .modal-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .modal-btn {
             background: #ff85a1;
             color: #fff;
-            padding: 8px 24px;
+            padding: 10px 16px;
             border-radius: 12px;
             font-size: 13px;
             font-weight: 700;
             border: none;
             cursor: pointer;
+        }
+
+        .modal-btn-secondary {
+            background: #f4edea;
+            color: #6d6875;
         }
     </style>
 </head>
@@ -240,16 +254,29 @@
             <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>Send Answer 💌</button>
         </div>
 
-        <button class="btn-skip" id="btnSkip" onclick="skipQuestion()" disabled>Skip this question 💨</button>
+        <button class="btn-skip" id="btnSkip" onclick="openSkipModal()" disabled>Skip this question 💨</button>
 
-        <div class="footer-note">Every answer goes straight to the rabbit</div>
+        <!-- 連續點 3 下這行文字可重置進度 -->
+        <div class="footer-note" id="secretReset" onclick="handleSecretReset()">Every answer goes straight to the rabbit</div>
     </div>
 </div>
 
+<!-- 提示型彈窗 -->
 <div class="modal-overlay" id="customModal">
     <div class="modal-box">
         <div class="modal-message" id="modalText">Don't leave it blank! 😈</div>
-        <button class="modal-btn" onclick="closeModal()">OK</button>
+        <button class="modal-btn" onclick="closeModal('customModal')">OK</button>
+    </div>
+</div>
+
+<!-- 跳過題目的二選一彈窗 -->
+<div class="modal-overlay" id="skipModal">
+    <div class="modal-box">
+        <div class="modal-message">Do you want to see this question again in the future? 🐾</div>
+        <div class="modal-btn-group">
+            <button class="modal-btn" onclick="confirmSkip(true)">Never show this again 🙅</button>
+            <button class="modal-btn modal-btn-secondary" onclick="confirmSkip(false)">Ask me again later ⏳</button>
+        </div>
     </div>
 </div>
 
@@ -259,14 +286,35 @@
 
     let questionPool = [];
     let currentQuestion = null;
+    let resetClickCount = 0;
+    let resetTimer = null;
+
+    // 取得已永久排除的題目清單 (已回答或選擇永不出現)
+    function getExcludedQuestions() {
+        return JSON.parse(localStorage.getItem('rf_excluded_questions') || '[]');
+    }
+
+    // 將題目加入排除清單
+    function excludeQuestion(qText) {
+        const list = getExcludedQuestions();
+        if (!list.includes(qText)) {
+            list.push(qText);
+            localStorage.setItem('rf_excluded_questions', JSON.stringify(list));
+        }
+    }
 
     function showAlert(msg) {
         document.getElementById('modalText').innerText = msg;
         document.getElementById('customModal').style.display = 'flex';
     }
 
-    function closeModal() {
-        document.getElementById('customModal').style.display = 'none';
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function openSkipModal() {
+        if (!currentQuestion) return;
+        document.getElementById('skipModal').style.display = 'flex';
     }
 
     async function fetchQuestions() {
@@ -300,8 +348,19 @@
             return;
         }
 
-        const randomIndex = Math.floor(Math.random() * questionPool.length);
-        currentQuestion = questionPool[randomIndex];
+        const excluded = getExcludedQuestions();
+        // 過濾掉所有已經答過或被永久跳過的題目
+        const availablePool = questionPool.filter(q => !excluded.includes(q.question));
+
+        if (availablePool.length === 0) {
+            document.getElementById('qCategory').innerText = "All Done 🎉";
+            document.getElementById('qText').innerText = "You've gone through all the questions! The rabbit is super proud of you 💕";
+            document.getElementById('btnDraw').disabled = true;
+            return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * availablePool.length);
+        currentQuestion = availablePool[randomIndex];
 
         document.getElementById('qCategory').innerText = `Category: ${currentQuestion.category}`;
         document.getElementById('qText').innerText = currentQuestion.question;
@@ -360,6 +419,9 @@
                 body: JSON.stringify(discordPayload)
             });
 
+            // 回答完後，將此題永久排除，不再被抽到
+            excludeQuestion(currentQuestion.question);
+
             document.getElementById('answerInput').value = "";
             document.getElementById('answerInput').disabled = true;
             document.getElementById('btnDraw').disabled = false;
@@ -373,20 +435,26 @@
         }
     }
 
-    async function skipQuestion() {
+    async function confirmSkip(neverShowAgain) {
+        closeModal('skipModal');
         if (!currentQuestion) return;
 
         document.getElementById('btnSubmit').disabled = true;
         document.getElementById('btnSkip').disabled = true;
 
-        // 偷偷傳送跳過通知給 Discord
+        if (neverShowAgain) {
+            // 選擇永不出現 -> 存入排除名單
+            excludeQuestion(currentQuestion.question);
+        }
+
+        // 推播跳過狀態至 Discord
         const discordPayload = {
             username: "Rabbit & Fox HQ",
             avatar_url: "https://i.pinimg.com/736x/21/d9/b4/21d9b4b0e3bebe7b233a0ea7d08d87aa.jpg",
             embeds: [
                 {
-                    title: "💨 The Fox skipped a question!",
-                    color: 10066329, // 灰色調，代表逃跑/跳過
+                    title: neverShowAgain ? "🙅 The Fox banished a question permanently!" : "⏳ The Fox postponed a question for later!",
+                    color: neverShowAgain ? 10066329 : 14211288,
                     fields: [
                         {
                             name: "📂 Topic",
@@ -396,6 +464,11 @@
                         {
                             name: "❓ Skipped Question",
                             value: currentQuestion.question,
+                            inline: false
+                        },
+                        {
+                            name: "📌 Choice",
+                            value: neverShowAgain ? "Never show this again" : "Ask me again later",
                             inline: false
                         }
                     ],
@@ -418,7 +491,25 @@
         document.getElementById('answerInput').disabled = true;
         document.getElementById('btnDraw').disabled = false;
         document.getElementById('qCategory').innerText = "Skipped 💨";
-        document.getElementById('qText').innerText = "Question skipped! Click 'Draw a Question' when you're ready.";
+        document.getElementById('qText').innerText = neverShowAgain 
+            ? "Question removed forever! Ready for the next one?" 
+            : "No problem, we'll save it for another time ✨";
+    }
+
+    // 測試專用：連續點擊底部文字 3 次重置進度
+    function handleSecretReset() {
+        resetClickCount++;
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => { resetClickCount = 0; }, 1000);
+
+        if (resetClickCount >= 3) {
+            localStorage.removeItem('rf_excluded_questions');
+            resetClickCount = 0;
+            showAlert("Progress has been reset! All questions are back. 🔄");
+            document.getElementById('btnDraw').disabled = false;
+            document.getElementById('qCategory').innerText = "Ready?";
+            document.getElementById('qText').innerText = "Click 'Draw a Question' to see what the rabbit prepared for you";
+        }
     }
 
     window.onload = fetchQuestions;
