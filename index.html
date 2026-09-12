@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rabbit & Fox // Q&A Room</title>
+    <title>Rabbit & Fox // Little Space</title>
     <style>
         :root {
             --bg-color: #fff0f3;
@@ -42,34 +42,18 @@
             max-width: 520px;
             box-shadow: 0 15px 35px rgba(255, 133, 161, 0.15);
             overflow: hidden;
-            transition: transform 0.2s;
         }
 
         .card-header {
             background: #ffe5ec;
-            padding: 16px 20px;
+            padding: 18px 20px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
         }
-
-        .header-dots {
-            display: flex;
-            gap: 6px;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        .dot-1 { background: #ff99c8; }
-        .dot-2 { background: #fcf6bd; }
-        .dot-3 { background: #d0f4de; }
 
         .card-title {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
             color: #ff5d8f;
             letter-spacing: 0.5px;
@@ -79,27 +63,14 @@
             padding: 28px;
             display: flex;
             flex-direction: column;
-            gap: 18px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background: #fff0f3;
-            color: #ff5d8f;
-            border: 1px solid #ffccd5;
-            width: fit-content;
-            margin: 0 auto;
+            gap: 20px;
         }
 
         .question-box {
             background: var(--card-bg);
             border: 2px dashed #ffccd5;
             border-radius: 18px;
-            padding: 24px 20px;
+            padding: 26px 20px;
             min-height: 120px;
             display: flex;
             flex-direction: column;
@@ -114,7 +85,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: #ff758f;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .question-text {
@@ -189,37 +160,80 @@
             color: var(--text-muted);
             text-align: center;
         }
+
+        /* 自訂可愛彈窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(2px);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-box {
+            background: #ffffff;
+            border: 2px solid #ffe5ec;
+            border-radius: 20px;
+            padding: 24px 30px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(255, 133, 161, 0.25);
+            max-width: 320px;
+            width: 85%;
+        }
+
+        .modal-message {
+            font-size: 15px;
+            font-weight: 600;
+            color: #4a4e69;
+            margin-bottom: 18px;
+        }
+
+        .modal-btn {
+            background: #ff85a1;
+            color: #fff;
+            padding: 8px 24px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
 <div class="cute-card">
     <div class="card-header">
-        <div class="header-dots">
-            <span class="dot dot-1"></span>
-            <span class="dot dot-2"></span>
-            <span class="dot dot-3"></span>
-        </div>
         <div class="card-title">🐰 Rabbit & Fox // Little Space 🦊</div>
-        <div style="width: 32px;"></div>
     </div>
 
     <div class="card-body">
-        <span class="status-badge" id="systemStatus">Ready for the little fox ✨</span>
-
         <div class="question-box">
-            <div class="category-tag" id="qCategory">✨ Sweet Start</div>
-            <div class="question-text" id="qText">Click "Draw a Question" to see what the rabbit prepared for you 💌</div>
+            <div class="category-tag" id="qCategory">Ready?</div>
+            <div class="question-text" id="qText">Click "Draw a Question" to see what the rabbit prepared for you</div>
         </div>
 
-        <textarea id="answerInput" placeholder="Write your honest answer here... ✍️" disabled></textarea>
+        <textarea id="answerInput" placeholder="Write your answer here..." disabled></textarea>
 
         <div class="btn-group">
             <button class="btn-draw" id="btnDraw" onclick="drawQuestion()">Draw a Question 🎲</button>
-            <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>Send Answer 💌</button>
+            <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>Send Answer</button>
         </div>
 
-        <div class="footer-note">Every answer goes straight to the rabbit 💕</div>
+        <div class="footer-note">Every answer goes straight to the rabbit</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="customModal">
+    <div class="modal-box">
+        <div class="modal-message" id="modalText">Don't leave it blank! 😈</div>
+        <button class="modal-btn" onclick="closeModal()">OK</button>
     </div>
 </div>
 
@@ -230,13 +244,22 @@
     let questionPool = [];
     let currentQuestion = null;
 
+    function showAlert(msg) {
+        document.getElementById('modalText').innerText = msg;
+        document.getElementById('customModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('customModal').style.display = 'none';
+    }
+
     async function fetchQuestions() {
         try {
             const res = await fetch(GOOGLE_SHEET_CSV_URL);
             const data = await res.text();
             parseCSV(data);
         } catch (e) {
-            document.getElementById('qText').innerText = "Oops! Couldn't load the questions right now 🥺";
+            document.getElementById('qText').innerText = "Oops! Couldn't load questions right now.";
         }
     }
 
@@ -257,14 +280,14 @@
 
     function drawQuestion() {
         if (questionPool.length === 0) {
-            alert("Questions are still loading, give it a moment!");
+            showAlert("Questions are still loading, please wait a moment!");
             return;
         }
 
         const randomIndex = Math.floor(Math.random() * questionPool.length);
         currentQuestion = questionPool[randomIndex];
 
-        document.getElementById('qCategory').innerText = `🎀 ${currentQuestion.category}`;
+        document.getElementById('qCategory').innerText = `Category: ${currentQuestion.category}`;
         document.getElementById('qText').innerText = currentQuestion.question;
 
         document.getElementById('btnDraw').disabled = true;
@@ -272,27 +295,24 @@
         document.getElementById('answerInput').value = "";
         document.getElementById('answerInput').focus();
         document.getElementById('btnSubmit').disabled = false;
-        document.getElementById('systemStatus').innerText = "Answer required! No escaping, little fox 🐾";
     }
 
     async function submitAnswer() {
         const answer = document.getElementById('answerInput').value.trim();
         if (!answer) {
-            alert("Don't leave it blank! 😜");
+            showAlert("Don't leave it blank! 😈");
             return;
         }
 
         document.getElementById('btnSubmit').disabled = true;
-        document.getElementById('systemStatus').innerText = "Sending to rabbit... 💌";
 
-        // Discord 卡片設定：超萌粉色系 + 小狐狸大頭貼
         const discordPayload = {
             username: "Rabbit & Fox HQ",
-            avatar_url: "https://i.pinimg.com/736x/21/d9/b4/21d9b4b0e3bebe7b233a0ea7d08d87aa.jpg", // 可愛小狐狸插圖
+            avatar_url: "https://i.pinimg.com/736x/21/d9/b4/21d9b4b0e3bebe7b233a0ea7d08d87aa.jpg",
             embeds: [
                 {
                     title: "🦊 The Fox has sent an answer!",
-                    color: 16745889, // 柔和櫻花粉色
+                    color: 16745889,
                     fields: [
                         {
                             name: "📂 Topic",
@@ -322,14 +342,13 @@
                 body: JSON.stringify(discordPayload)
             });
 
-            document.getElementById('systemStatus').innerText = "Sent! The rabbit has received it 💕";
             document.getElementById('answerInput').value = "";
             document.getElementById('answerInput').disabled = true;
             document.getElementById('btnDraw').disabled = false;
-            document.getElementById('qCategory').innerText = "💌 Sent Successfully";
-            document.getElementById('qText').innerText = "Your answer was delivered! Ready for the next one? ✨";
+            document.getElementById('qCategory').innerText = "Sent Successfully";
+            document.getElementById('qText').innerText = "Your answer was delivered. Ready for the next one?";
         } catch (error) {
-            alert("Something went wrong, please try again!");
+            showAlert("Something went wrong, please try again!");
             document.getElementById('btnSubmit').disabled = false;
         }
     }
