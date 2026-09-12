@@ -3,29 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ENDBOSS PROTOCOL // Q&A CHALLENGE</title>
+    <title>Rabbit & Fox // Q&A Room</title>
     <style>
         :root {
-            --bg-color: #0d1117;
-            --panel-bg: #161b22;
-            --primary: #58a6ff;
-            --accent: #2ea043;
-            --text: #c9d1d9;
-            --muted: #8b949e;
-            --border: #30363d;
-            --danger: #f85149;
+            --bg-color: #fff0f3;
+            --panel-bg: #ffffff;
+            --primary: #ff85a1;
+            --primary-hover: #ff7096;
+            --accent: #fbb1bd;
+            --text-main: #4a4e69;
+            --text-muted: #9a8c98;
+            --border: #ffe5ec;
+            --card-bg: #fff8f9;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
         }
 
         body {
             background-color: var(--bg-color);
-            color: var(--text);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -33,71 +34,73 @@
             padding: 20px;
         }
 
-        .terminal {
+        .cute-card {
             background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            border: 2px solid var(--border);
+            border-radius: 24px;
             width: 100%;
-            max-width: 580px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 520px;
+            box-shadow: 0 15px 35px rgba(255, 133, 161, 0.15);
             overflow: hidden;
+            transition: transform 0.2s;
         }
 
-        .terminal-header {
-            background: #21262d;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
+        .card-header {
+            background: #ffe5ec;
+            padding: 16px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        .dots {
+        .header-dots {
             display: flex;
             gap: 6px;
         }
 
         .dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
         }
 
-        .dot-red { background: var(--danger); }
-        .dot-yellow { background: #d29922; }
-        .dot-green { background: var(--accent); }
+        .dot-1 { background: #ff99c8; }
+        .dot-2 { background: #fcf6bd; }
+        .dot-3 { background: #d0f4de; }
 
-        .terminal-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--muted);
-            letter-spacing: 1px;
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ff5d8f;
+            letter-spacing: 0.5px;
         }
 
-        .terminal-body {
-            padding: 24px;
+        .card-body {
+            padding: 28px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
         }
 
         .status-badge {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
-            background: rgba(88, 166, 255, 0.1);
-            color: var(--primary);
-            border: 1px solid rgba(88, 166, 255, 0.3);
+            font-weight: 600;
+            background: #fff0f3;
+            color: #ff5d8f;
+            border: 1px solid #ffccd5;
             width: fit-content;
+            margin: 0 auto;
         }
 
-        .question-card {
-            background: #0d1117;
-            border: 1px dashed var(--border);
-            border-radius: 6px;
-            padding: 20px;
-            min-height: 110px;
+        .question-box {
+            background: var(--card-bg);
+            border: 2px dashed #ffccd5;
+            border-radius: 18px;
+            padding: 24px 20px;
+            min-height: 120px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -106,35 +109,38 @@
         }
 
         .category-tag {
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--muted);
+            letter-spacing: 1px;
+            color: #ff758f;
             margin-bottom: 8px;
         }
 
         .question-text {
             font-size: 16px;
-            line-height: 1.5;
-            font-weight: 500;
+            line-height: 1.6;
+            font-weight: 600;
+            color: #594a4e;
         }
 
         textarea {
             width: 100%;
             height: 110px;
-            background: #0d1117;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            padding: 12px;
+            background: #ffffff;
+            border: 2px solid #ffccd5;
+            border-radius: 16px;
+            color: var(--text-main);
+            padding: 14px;
             font-size: 14px;
             resize: none;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
 
         textarea:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 133, 161, 0.2);
         }
 
         .btn-group {
@@ -144,74 +150,76 @@
 
         button {
             flex: 1;
-            padding: 12px;
-            border-radius: 6px;
+            padding: 13px;
+            border-radius: 16px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
             border: none;
         }
 
         .btn-draw {
-            background: #238636;
-            color: #fff;
+            background: #ff85a1;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(255, 133, 161, 0.3);
         }
 
         .btn-draw:hover:not(:disabled) {
-            background: #2ea043;
+            background: var(--primary-hover);
         }
 
         .btn-submit {
-            background: var(--primary);
-            color: #0d1117;
+            background: #ffccd5;
+            color: #594a4e;
         }
 
         .btn-submit:hover:not(:disabled) {
-            background: #79c0ff;
+            background: #ffb3c1;
         }
 
         button:disabled {
-            opacity: 0.35;
+            opacity: 0.45;
             cursor: not-allowed;
+            box-shadow: none;
         }
 
         .footer-note {
-            font-size: 11px;
-            color: var(--muted);
+            font-size: 12px;
+            color: var(--text-muted);
             text-align: center;
         }
     </style>
 </head>
 <body>
 
-<div class="terminal">
-    <div class="terminal-header">
-        <div class="dots">
-            <span class="dot dot-red"></span>
-            <span class="dot dot-yellow"></span>
-            <span class="dot dot-green"></span>
+<div class="cute-card">
+    <div class="card-header">
+        <div class="header-dots">
+            <span class="dot dot-1"></span>
+            <span class="dot dot-2"></span>
+            <span class="dot dot-3"></span>
         </div>
-        <div class="terminal-title">PROTOCOL // ROOT ACCESS</div>
-        <div style="width: 42px;"></div>
+        <div class="card-title">🐰 Rabbit & Fox // Little Space 🦊</div>
+        <div style="width: 32px;"></div>
     </div>
 
-    <div class="terminal-body">
-        <span class="status-badge" id="systemStatus">STATUS: READY FOR EXTRACTION</span>
+    <div class="card-body">
+        <span class="status-badge" id="systemStatus">Ready for the little fox ✨</span>
 
-        <div class="question-card">
-            <div class="category-tag" id="qCategory">SYSTEM IDLE</div>
-            <div class="question-text" id="qText">Hit "Draw Question" to pull a prompt from the database.</div>
+        <div class="question-box">
+            <div class="category-tag" id="qCategory">✨ Sweet Start</div>
+            <div class="question-text" id="qText">Click "Draw a Question" to see what the rabbit prepared for you 💌</div>
         </div>
 
-        <textarea id="answerInput" placeholder="Type your answer here... (Submit unlocks the next prompt)" disabled></textarea>
+        <textarea id="answerInput" placeholder="Write your honest answer here... ✍️" disabled></textarea>
 
         <div class="btn-group">
-            <button class="btn-draw" id="btnDraw" onclick="drawQuestion()">Draw Question</button>
-            <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>Submit Answer</button>
+            <button class="btn-draw" id="btnDraw" onclick="drawQuestion()">Draw a Question 🎲</button>
+            <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()" disabled>Send Answer 💌</button>
         </div>
 
-        <div class="footer-note">Rule: Each answer is transmitted directly. Endboss mode applies.</div>
+        <div class="footer-note">Every answer goes straight to the rabbit 💕</div>
     </div>
 </div>
 
@@ -228,7 +236,7 @@
             const data = await res.text();
             parseCSV(data);
         } catch (e) {
-            document.getElementById('qText').innerText = "Failed to sync question pool. Check database connection.";
+            document.getElementById('qText').innerText = "Oops! Couldn't load the questions right now 🥺";
         }
     }
 
@@ -241,7 +249,7 @@
                 questionPool.push({
                     category: cols[0].replace(/"/g, '').trim(),
                     question: cols[1].replace(/"/g, '').trim(),
-                    author: cols[2] ? cols[2].replace(/"/g, '').trim() : 'Anonymous'
+                    author: cols[2] ? cols[2].replace(/"/g, '').trim() : 'Rabbit'
                 });
             }
         }
@@ -249,14 +257,14 @@
 
     function drawQuestion() {
         if (questionPool.length === 0) {
-            alert("Questions are still loading or pool is empty!");
+            alert("Questions are still loading, give it a moment!");
             return;
         }
 
         const randomIndex = Math.floor(Math.random() * questionPool.length);
         currentQuestion = questionPool[randomIndex];
 
-        document.getElementById('qCategory').innerText = `[ CATEGORY: ${currentQuestion.category} ]`;
+        document.getElementById('qCategory').innerText = `🎀 ${currentQuestion.category}`;
         document.getElementById('qText').innerText = currentQuestion.question;
 
         document.getElementById('btnDraw').disabled = true;
@@ -264,30 +272,30 @@
         document.getElementById('answerInput').value = "";
         document.getElementById('answerInput').focus();
         document.getElementById('btnSubmit').disabled = false;
-        document.getElementById('systemStatus').innerText = "LOCK ENGAGED: RESPONSE REQUIRED";
-        document.getElementById('systemStatus').style.color = "#f85149";
+        document.getElementById('systemStatus').innerText = "Answer required! No escaping, little fox 🐾";
     }
 
     async function submitAnswer() {
         const answer = document.getElementById('answerInput').value.trim();
         if (!answer) {
-            alert("Answer cannot be empty!");
+            alert("Don't leave it blank! 😜");
             return;
         }
 
         document.getElementById('btnSubmit').disabled = true;
-        document.getElementById('systemStatus').innerText = "TRANSMITTING TO DISCORD...";
+        document.getElementById('systemStatus').innerText = "Sending to rabbit... 💌";
 
+        // Discord 卡片設定：超萌粉色系 + 小狐狸大頭貼
         const discordPayload = {
-            username: "Endboss Protocol",
-            avatar_url: "https://i.imgur.com/4M34hi2.png",
+            username: "Rabbit & Fox HQ",
+            avatar_url: "https://i.pinimg.com/736x/21/d9/b4/21d9b4b0e3bebe7b233a0ea7d08d87aa.jpg", // 可愛小狐狸插圖
             embeds: [
                 {
-                    title: "🚨 New Answer Extracted!",
-                    color: 5793266,
+                    title: "🦊 The Fox has sent an answer!",
+                    color: 16745889, // 柔和櫻花粉色
                     fields: [
                         {
-                            name: "📂 Category",
+                            name: "📂 Topic",
                             value: currentQuestion.category,
                             inline: true
                         },
@@ -297,14 +305,11 @@
                             inline: false
                         },
                         {
-                            name: "💬 Answer",
+                            name: "💬 Fox's Answer",
                             value: answer,
                             inline: false
                         }
                     ],
-                    footer: {
-                        text: "Endboss Protocol • Status: Monitored"
-                    },
                     timestamp: new Date().toISOString()
                 }
             ]
@@ -317,15 +322,14 @@
                 body: JSON.stringify(discordPayload)
             });
 
-            document.getElementById('systemStatus').innerText = "TRANSMISSION SUCCESSFUL // SYSTEM READY";
-            document.getElementById('systemStatus').style.color = "#2ea043";
+            document.getElementById('systemStatus').innerText = "Sent! The rabbit has received it 💕";
             document.getElementById('answerInput').value = "";
             document.getElementById('answerInput').disabled = true;
             document.getElementById('btnDraw').disabled = false;
-            document.getElementById('qCategory').innerText = "PROMPT CLEARED";
-            document.getElementById('qText').innerText = "Answer transmitted to headquarters. Ready for next draw.";
+            document.getElementById('qCategory').innerText = "💌 Sent Successfully";
+            document.getElementById('qText').innerText = "Your answer was delivered! Ready for the next one? ✨";
         } catch (error) {
-            alert("Transmission failed. Check connection.");
+            alert("Something went wrong, please try again!");
             document.getElementById('btnSubmit').disabled = false;
         }
     }
