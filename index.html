@@ -181,6 +181,7 @@
             text-align: center;
         }
 
+        /* 自訂彈窗 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -274,6 +275,7 @@
     </div>
 </div>
 
+<!-- 提示型彈窗 -->
 <div class="modal-overlay" id="customModal">
     <div class="modal-box">
         <div class="modal-message" id="modalText">Don't leave it blank! 😈</div>
@@ -281,6 +283,7 @@
     </div>
 </div>
 
+<!-- 送出前防呆確認彈窗 -->
 <div class="modal-overlay" id="submitConfirmModal">
     <div class="modal-box">
         <div class="modal-message">Ready to send? Once submitted, this question will be completed and won't appear again! 💌</div>
@@ -291,6 +294,7 @@
     </div>
 </div>
 
+<!-- 跳過題目的彈窗 -->
 <div class="modal-overlay" id="skipModal">
     <div class="modal-box">
         <div class="modal-message" id="skipModalPrompt">Do you want to see this question again in the future? 🐾</div>
@@ -302,6 +306,7 @@
     </div>
 </div>
 
+<!-- 通關後的選擇彈窗 -->
 <div class="modal-overlay" id="finishModal">
     <div class="modal-box">
         <div class="modal-message">🎉 All standard questions cleared!<br><br>Would you like to keep rolling for Rabbit cards, or take a break? ✨</div>
@@ -343,6 +348,24 @@
         if (!list.includes(qText)) {
             list.push(qText);
             localStorage.setItem('rf_excluded_questions', JSON.stringify(list));
+        }
+        updateDrawButtonText();
+    }
+
+    // 計算進度並更新按鈕文字：Draw a Question 🎲 (已答/總題數)
+    function updateDrawButtonText() {
+        const excluded = getExcludedQuestions();
+        const regularQuestions = questionPool.filter(q => !isRabbitCard(q));
+        const total = regularQuestions.length;
+        
+        // 已回答或已永久刪除的題數
+        const answeredCount = regularQuestions.filter(q => excluded.includes(q.question)).length;
+        
+        const btn = document.getElementById('btnDraw');
+        if (total > 0) {
+            btn.innerText = `Draw a Question 🎲 (${answeredCount}/${total})`;
+        } else {
+            btn.innerText = `Draw a Question 🎲`;
         }
     }
 
@@ -395,6 +418,7 @@
                 });
             }
         }
+        updateDrawButtonText();
     }
 
     function drawQuestion() {
@@ -509,6 +533,7 @@
             document.getElementById('qCategory').innerText = "Sent Successfully";
             document.getElementById('qText').innerText = "Your answer was delivered. Ready for the next one?";
             pendingAnswer = "";
+            updateDrawButtonText();
         } catch (error) {
             showAlert("Something went wrong, please try again!");
             document.getElementById('btnSubmit').disabled = false;
@@ -577,6 +602,8 @@
         document.getElementById('qText').innerText = (neverShowAgain && !isRabbit)
             ? "Question removed forever! Ready for the next one?" 
             : "No problem, saved for later ✨";
+        
+        updateDrawButtonText();
     }
 
     function handleHiddenReset() {
@@ -591,6 +618,7 @@
             document.getElementById('btnDraw').disabled = false;
             document.getElementById('qCategory').innerText = "Ready?";
             document.getElementById('qText').innerText = "Click 'Draw a Question' to see what the rabbit prepared for you";
+            updateDrawButtonText();
         }
     }
 
