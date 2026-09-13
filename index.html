@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rabbit & Fox // Little Space</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             --bg-color: #fff0f3;
@@ -23,7 +22,6 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -33,7 +31,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 16px;
+            padding: 20px;
         }
 
         .cute-card {
@@ -41,10 +39,9 @@
             border: 2px solid var(--border);
             border-radius: 24px;
             width: 100%;
-            max-width: 500px;
+            max-width: 520px;
             box-shadow: 0 15px 35px rgba(255, 133, 161, 0.15);
             overflow: hidden;
-            position: relative;
         }
 
         .card-header {
@@ -69,36 +66,23 @@
         }
 
         .card-body {
-            padding: 24px;
+            padding: 28px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 18px;
         }
 
         .question-box {
             background: var(--card-bg);
             border: 2px dashed #ffccd5;
             border-radius: 18px;
-            padding: 24px 18px;
-            min-height: 125px;
+            padding: 26px 20px;
+            min-height: 120px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .question-box.gold-mode {
-            background: linear-gradient(145deg, #fffdf7, #fff8e7);
-            border: 2px dashed #e6c587;
-            box-shadow: 0 4px 18px rgba(230, 197, 135, 0.25);
-        }
-
-        .question-box.cert-mode {
-            background: linear-gradient(135deg, #fff9f0, #fff0f5);
-            border: 2px solid #e8b4b8;
-            box-shadow: 0 8px 24px rgba(232, 180, 184, 0.25);
         }
 
         .category-tag {
@@ -107,12 +91,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: #ff758f;
-            margin-bottom: 8px;
-            transition: color 0.3s ease;
-        }
-
-        .category-tag.gold-mode {
-            color: #b38728;
+            margin-bottom: 10px;
         }
 
         .question-text {
@@ -120,12 +99,6 @@
             line-height: 1.6;
             font-weight: 600;
             color: #594a4e;
-            white-space: pre-line;
-        }
-
-        .input-wrapper {
-            position: relative;
-            width: 100%;
         }
 
         textarea {
@@ -135,8 +108,8 @@
             border: 2px solid #ffccd5;
             border-radius: 16px;
             color: var(--text-main);
-            padding: 14px 14px 28px 14px;
-            font-size: 16px;
+            padding: 14px;
+            font-size: 14px;
             resize: none;
             outline: none;
             transition: all 0.2s;
@@ -147,19 +120,9 @@
             box-shadow: 0 0 0 4px rgba(255, 133, 161, 0.2);
         }
 
-        .char-counter {
-            position: absolute;
-            bottom: 8px;
-            right: 14px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            pointer-events: none;
-        }
-
         .btn-group {
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
 
         button {
@@ -197,7 +160,7 @@
             background: #f4edea;
             color: #9a8c98;
             font-size: 13px;
-            padding: 10px;
+            padding: 9px;
             border-radius: 12px;
         }
 
@@ -236,7 +199,7 @@
             background: #ffffff;
             border: 2px solid #ffe5ec;
             border-radius: 20px;
-            padding: 24px 24px;
+            padding: 24px 26px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(255, 133, 161, 0.25);
             max-width: 340px;
@@ -293,15 +256,12 @@
     </div>
 
     <div class="card-body">
-        <div class="question-box" id="qBox">
+        <div class="question-box">
             <div class="category-tag" id="qCategory">Ready?</div>
             <div class="question-text" id="qText">Click "Draw a Question" to see what the rabbit prepared for you</div>
         </div>
 
-        <div class="input-wrapper">
-            <textarea id="answerInput" placeholder="Write your answer here..." oninput="handleInputText(this)" disabled></textarea>
-            <div class="char-counter" id="charCounter">0 words</div>
-        </div>
+        <textarea id="answerInput" placeholder="Write your answer here..." disabled></textarea>
 
         <div class="btn-group">
             <button class="btn-draw" id="btnDraw" onclick="drawQuestion()">Draw a Question 🎲</button>
@@ -314,7 +274,6 @@
     </div>
 </div>
 
-<!-- 提示型彈窗 -->
 <div class="modal-overlay" id="customModal">
     <div class="modal-box">
         <div class="modal-message" id="modalText">Don't leave it blank! 😈</div>
@@ -322,7 +281,6 @@
     </div>
 </div>
 
-<!-- 送出前確認彈窗 -->
 <div class="modal-overlay" id="submitConfirmModal">
     <div class="modal-box">
         <div class="modal-message">Ready to send? Once submitted, this question will be completed and won't appear again! 💌</div>
@@ -333,7 +291,6 @@
     </div>
 </div>
 
-<!-- 跳過題目的彈窗 -->
 <div class="modal-overlay" id="skipModal">
     <div class="modal-box">
         <div class="modal-message" id="skipModalPrompt">Do you want to see this question again in the future? 🐾</div>
@@ -346,51 +303,17 @@
 </div>
 
 <script>
-    const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRgHmPt83mlah6CgZVoad0oNvC1XbaUGz4tkDATEKrSBABxOh6z765dGrVIbhE54nqsc9oEEbnaxGkl/pub?output=csv";
-    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548316493849305159/vz2IRdJnK0pRW9cOCfOHV8VKPMVJkVG5xIITST0ypHdpzgtoXKicqPLKsuZ1yxCCmiqx";
+    // 請將此處換成在 Apps Script 部署後取得的 Web App URL
+    const BACKEND_API_URL = "https://script.google.com/macros/s/AKfycbyBV-C-ZXitsi3jW5giZmC7EZjbpgBseN7tAg59lAXUncoTjSJgcTUvxYNRwSo8OkBOBQ/exec";
 
-    let questionPool = [];
     let currentQuestion = null;
     let pendingAnswer = "";
     let resetCount = 0;
     let resetTimer = null;
-    let cooldownQuestions = [];
-
-    // 計算英文單字數（Words）
-    function countWords(str) {
-        const trimmed = (str || '').trim();
-        if (!trimmed) return 0;
-        return trimmed.split(/\s+/).filter(Boolean).length;
-    }
-
-    function handleInputText(el) {
-        const words = countWords(el.value);
-        document.getElementById('charCounter').innerText = `${words} ${words === 1 ? 'word' : 'words'}`;
-    }
-
-    function fireCuteConfetti() {
-        confetti({
-            particleCount: 45,
-            spread: 60,
-            origin: { y: 0.75 },
-            colors: ['#ff85a1', '#ffccd5', '#fbb1bd', '#ffd166', '#ffffff']
-        });
-    }
-
-    function addToCooldown(qText) {
-        const clean = (qText || '').trim();
-        if (!clean) return;
-        cooldownQuestions = cooldownQuestions.filter(item => item !== clean);
-        cooldownQuestions.push(clean);
-        if (cooldownQuestions.length > 3) {
-            cooldownQuestions.shift();
-        }
-    }
 
     function isRabbitCard(q) {
         if (!q) return false;
-        const cat = (q.category || '').trim().toLowerCase();
-        return cat === 'rabbit';
+        return (q.category || '').trim().toLowerCase() === 'rabbit';
     }
 
     function getExcludedQuestions() {
@@ -403,41 +326,10 @@
 
     function excludeQuestion(qText) {
         if (currentQuestion && isRabbitCard(currentQuestion)) return;
-
-        const clean = (qText || '').trim();
         const list = getExcludedQuestions();
-        if (!list.includes(clean)) {
-            list.push(clean);
+        if (!list.includes(qText)) {
+            list.push(qText);
             localStorage.setItem('rf_excluded_questions', JSON.stringify(list));
-        }
-        updateDrawButtonText();
-    }
-
-    function updateDrawButtonText() {
-        const excluded = getExcludedQuestions();
-        const regularQuestions = questionPool.filter(q => !isRabbitCard(q));
-        const total = regularQuestions.length;
-        const answeredCount = regularQuestions.filter(q => excluded.includes(q.question.trim())).length;
-        
-        const btn = document.getElementById('btnDraw');
-        if (total > 0) {
-            btn.innerText = `Draw a Question 🎲 (${answeredCount}/${total})`;
-        } else {
-            btn.innerText = `Draw a Question 🎲`;
-        }
-    }
-
-    function setCardVisual(mode) {
-        const box = document.getElementById('qBox');
-        const tag = document.getElementById('qCategory');
-        box.classList.remove('gold-mode', 'cert-mode');
-        tag.classList.remove('gold-mode');
-
-        if (mode === 'gold') {
-            box.classList.add('gold-mode');
-            tag.classList.add('gold-mode');
-        } else if (mode === 'cert') {
-            box.classList.add('cert-mode');
         }
     }
 
@@ -452,7 +344,6 @@
 
     function openSkipModal() {
         if (!currentQuestion) return;
-
         const neverBtn = document.getElementById('btnNeverShow');
         const promptMsg = document.getElementById('skipModalPrompt');
 
@@ -463,129 +354,40 @@
             neverBtn.style.display = 'block';
             promptMsg.innerText = "Do you want to see this question again in the future? 🐾";
         }
-
         document.getElementById('skipModal').style.display = 'flex';
     }
 
-    async function fetchQuestions() {
-        try {
-            const res = await fetch(GOOGLE_SHEET_CSV_URL);
-            const data = await res.text();
-            parseRobustCSV(data);
-        } catch (e) {
-            document.getElementById('qText').innerText = "Oops! Couldn't load questions right now.";
-        }
-    }
-
-    function parseRobustCSV(text) {
-        let p = '', c = '', r = [];
-        let q = false;
-        let row = [''];
-        questionPool = [];
-
-        for (let i = 0; i < text.length; i++) {
-            c = text[i];
-            let next = text[i + 1];
-            if (c === '"') {
-                if (q && next === '"') { row[row.length - 1] += '"'; i++; }
-                else { q = !q; }
-            } else if (c === ',' && !q) {
-                row.push('');
-            } else if ((c === '\r' || c === '\n') && !q) {
-                if (c === '\r' && next === '\n') { i++; }
-                r.push(row);
-                row = [''];
-            } else {
-                row[row.length - 1] += c;
-            }
-        }
-        if (row.length > 1 || row[0] !== '') { r.push(row); }
-
-        for (let i = 1; i < r.length; i++) {
-            const cols = r[i];
-            if (cols.length >= 2 && cols[1].trim() !== '') {
-                questionPool.push({
-                    category: cols[0].trim(),
-                    question: cols[1].trim(),
-                    author: cols[2] ? cols[2].trim() : ''
-                });
-            }
-        }
-        updateDrawButtonText();
-    }
-
-    function drawQuestion() {
-        if (questionPool.length === 0) {
-            showAlert("Questions are still loading, please wait a moment!");
-            return;
-        }
+    async function drawQuestion() {
+        document.getElementById('btnDraw').disabled = true;
+        document.getElementById('qText').innerText = "Reaching into the magic pouch... ✨";
 
         const excluded = getExcludedQuestions();
-        const regularAvailable = questionPool.filter(q => !isRabbitCard(q) && !excluded.includes(q.question.trim()));
-        const rabbitCards = questionPool.filter(q => isRabbitCard(q));
+        const url = `${BACKEND_API_URL}?excluded=${encodeURIComponent(excluded.join('|||'))}`;
 
-        if (regularAvailable.length === 0) {
-            showCompletionEnding(rabbitCards);
-            return;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.finished) {
+                document.getElementById('qCategory').innerText = "All Done 🎉";
+                document.getElementById('qText').innerText = "You've completed all the questions! The rabbit is super proud of you 💕";
+                return;
+            }
+
+            currentQuestion = data;
+            document.getElementById('qCategory').innerText = `Category: ${currentQuestion.category}`;
+            document.getElementById('qText').innerText = currentQuestion.question;
+
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('answerInput').value = "";
+            document.getElementById('answerInput').focus();
+            document.getElementById('btnSubmit').disabled = false;
+            document.getElementById('btnSkip').disabled = false;
+        } catch (e) {
+            showAlert("Connection hiccup! Please try again.");
+            document.getElementById('btnDraw').disabled = false;
+            document.getElementById('qText').innerText = "Click 'Draw a Question' to see what the rabbit prepared for you";
         }
-
-        const fullAvailable = questionPool.filter(q => !excluded.includes(q.question.trim()));
-        let eligible = fullAvailable.filter(q => !cooldownQuestions.includes(q.question.trim()));
-
-        if (eligible.length === 0) {
-            const oldestInCooldown = cooldownQuestions[0];
-            eligible = fullAvailable.filter(q => q.question.trim() === oldestInCooldown);
-            if (eligible.length === 0) eligible = fullAvailable;
-        }
-
-        const chosen = eligible[Math.floor(Math.random() * eligible.length)];
-        pickCard(chosen);
-    }
-
-    function showCompletionEnding(rabbitCards) {
-        setCardVisual('cert');
-        fireCuteConfetti();
-
-        document.getElementById('qCategory').innerText = "🏆 Achievement Unlocked";
-        document.getElementById('qText').innerText = "You've answered all standard questions!\nReady to grill the rabbit? 👑";
-
-        const drawBtn = document.getElementById('btnDraw');
-        if (rabbitCards.length > 0) {
-            drawBtn.innerText = "Challenge the Rabbit 👑";
-            drawBtn.disabled = false;
-            drawBtn.onclick = () => {
-                pickCard(rabbitCards[Math.floor(Math.random() * rabbitCards.length)]);
-                drawBtn.onclick = drawQuestion;
-            };
-        } else {
-            drawBtn.innerText = "Completed 🎉";
-            drawBtn.disabled = true;
-        }
-
-        document.getElementById('answerInput').disabled = true;
-        document.getElementById('btnSubmit').disabled = true;
-        document.getElementById('btnSkip').disabled = true;
-    }
-
-    function pickCard(selected) {
-        currentQuestion = selected;
-        const isRabbit = isRabbitCard(currentQuestion);
-
-        setCardVisual(isRabbit ? 'gold' : 'normal');
-
-        document.getElementById('qCategory').innerText = isRabbit 
-            ? `✨ Category: ${currentQuestion.category} ✨` 
-            : `Category: ${currentQuestion.category}`;
-        document.getElementById('qText').innerText = currentQuestion.question;
-
-        document.getElementById('btnDraw').disabled = true;
-        const input = document.getElementById('answerInput');
-        input.disabled = false;
-        input.value = "";
-        document.getElementById('charCounter').innerText = "0 words";
-        input.focus();
-        document.getElementById('btnSubmit').disabled = false;
-        document.getElementById('btnSkip').disabled = false;
     }
 
     function promptSubmitConfirm() {
@@ -594,69 +396,42 @@
             showAlert("Don't leave it blank! 😈");
             return;
         }
-
         pendingAnswer = answer;
         document.getElementById('submitConfirmModal').style.display = 'flex';
     }
 
     async function confirmAndSendAnswer() {
         closeModal('submitConfirmModal');
-
-        const submitBtn = document.getElementById('btnSubmit');
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Sending... ⏳";
+        document.getElementById('btnSubmit').disabled = true;
         document.getElementById('btnSkip').disabled = true;
 
-        const isRabbit = isRabbitCard(currentQuestion);
-
-        const discordPayload = {
-            username: "Rabbit & Fox HQ",
-            avatar_url: "https://i.pinimg.com/736x/21/d9/b4/21d9b4b0e3bebe7b233a0ea7d08d87aa.jpg",
-            embeds: [
-                {
-                    title: isRabbit ? "👑 The Fox answered the Rabbit / Boss Card!" : "🦊 The Fox has sent an answer!",
-                    color: isRabbit ? 16753920 : 16745889,
-                    fields: [
-                        { name: "📂 Topic", value: currentQuestion.category, inline: true },
-                        { name: "❓ Question", value: currentQuestion.question, inline: false },
-                        { name: "💬 Fox's Answer", value: pendingAnswer, inline: false }
-                    ],
-                    timestamp: new Date().toISOString()
-                }
-            ]
+        const payload = {
+            action: "answer",
+            question: currentQuestion,
+            answer: pendingAnswer
         };
 
         try {
-            await fetch(DISCORD_WEBHOOK_URL, {
+            await fetch(BACKEND_API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(discordPayload)
+                body: JSON.stringify(payload)
             });
 
-            if (!isRabbit) {
+            if (!isRabbitCard(currentQuestion)) {
                 excludeQuestion(currentQuestion.question);
-            } else {
-                addToCooldown(currentQuestion.question);
             }
 
-            fireCuteConfetti();
-            setCardVisual('normal');
-
             document.getElementById('answerInput').value = "";
-            document.getElementById('charCounter').innerText = "0 words";
             document.getElementById('answerInput').disabled = true;
             document.getElementById('btnDraw').disabled = false;
             document.getElementById('btnSkip').disabled = true;
             document.getElementById('qCategory').innerText = "Sent Successfully";
             document.getElementById('qText').innerText = "Your answer was delivered. Ready for the next one?";
             pendingAnswer = "";
-            updateDrawButtonText();
         } catch (error) {
-            showAlert("Something went wrong, please try again!");
+            showAlert("Transmission hiccup! Please try again.");
+            document.getElementById('btnSubmit').disabled = false;
             document.getElementById('btnSkip').disabled = false;
-        } finally {
-            submitBtn.innerText = "Send Answer 💌";
-            submitBtn.disabled = true;
         }
     }
 
@@ -668,53 +443,30 @@
         document.getElementById('btnSkip').disabled = true;
 
         const isRabbit = isRabbitCard(currentQuestion);
-
         if (neverShowAgain && !isRabbit) {
             excludeQuestion(currentQuestion.question);
-        } else {
-            addToCooldown(currentQuestion.question);
         }
 
-        const discordPayload = {
-            username: "Rabbit & Fox HQ",
-            avatar_url: "https://i.pinimg.com/736x/21/d9/b4/21d9b4b0e3bebe7b233a0ea7d08d87aa.jpg",
-            embeds: [
-                {
-                    title: (neverShowAgain && !isRabbit) 
-                        ? "🙅 The Fox banished a question permanently!" 
-                        : "⏳ The Fox postponed a question for later!",
-                    color: (neverShowAgain && !isRabbit) ? 10066329 : 14211288,
-                    fields: [
-                        { name: "📂 Topic", value: currentQuestion.category, inline: true },
-                        { name: "❓ Skipped Question", value: currentQuestion.question, inline: false },
-                        { name: "📌 Choice", value: (neverShowAgain && !isRabbit) ? "Never show this again" : "Ask me again later", inline: false }
-                    ],
-                    timestamp: new Date().toISOString()
-                }
-            ]
+        const payload = {
+            action: "skip",
+            question: currentQuestion,
+            neverShowAgain: neverShowAgain
         };
 
         try {
-            await fetch(DISCORD_WEBHOOK_URL, {
+            fetch(BACKEND_API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(discordPayload)
+                body: JSON.stringify(payload)
             });
-        } catch (e) {
-            // 靜默處理
-        }
+        } catch (e) {}
 
-        setCardVisual('normal');
         document.getElementById('answerInput').value = "";
-        document.getElementById('charCounter').innerText = "0 words";
         document.getElementById('answerInput').disabled = true;
         document.getElementById('btnDraw').disabled = false;
         document.getElementById('qCategory').innerText = "Skipped 💨";
         document.getElementById('qText').innerText = (neverShowAgain && !isRabbit)
             ? "Question removed forever! Ready for the next one?" 
             : "No problem, saved for later ✨";
-        
-        updateDrawButtonText();
     }
 
     function handleHiddenReset() {
@@ -725,20 +477,12 @@
         if (resetCount >= 3) {
             resetCount = 0;
             localStorage.removeItem('rf_excluded_questions');
-            cooldownQuestions = [];
-            setCardVisual('normal');
-            showAlert("Progress cleared! All questions are back. 🔄");
-            
-            const drawBtn = document.getElementById('btnDraw');
-            drawBtn.disabled = false;
-            drawBtn.onclick = drawQuestion;
+            showAlert("Progress cleared! You can now draw all questions. 🔄");
+            document.getElementById('btnDraw').disabled = false;
             document.getElementById('qCategory').innerText = "Ready?";
             document.getElementById('qText').innerText = "Click 'Draw a Question' to see what the rabbit prepared for you";
-            updateDrawButtonText();
         }
     }
-
-    window.onload = fetchQuestions;
 </script>
 </body>
 </html>
